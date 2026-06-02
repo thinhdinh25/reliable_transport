@@ -1,5 +1,6 @@
 import argparse
 import socket
+import sys
 
 from utils import PacketHeader, compute_checksum
 
@@ -37,11 +38,11 @@ def receive_start():
         start_header = PacketHeader(start_pkt[:16])
         #verify start packet
         if start_header.type != 0 or start_header.seq_num != 0 or start_header.length != 0:
-            print("Not Start Package")
+            print("Not Start Package", file=sys.stderr)
             continue
         # Verify checksum
         if verify_checksum(start_pkt) == False:
-            print("Start checksums not match")
+            print("Start checksums not match", file=sys.stderr)
             continue
         # resent ack of start
         send_ack(1)
@@ -67,7 +68,7 @@ def receive_data():
         #end condition 
         elif data_header.type == 1:
             send_ack(expect_seq + 1)
-            print("received all file")
+            print("received all file", file=sys.stderr)
             break
 
         elif data_header.type == 2:
@@ -79,6 +80,8 @@ def receive_data():
             else:
                 buffer[received_seq] = data_pkt[16 : 16 + data_header.length]
                 while expect_seq in buffer:
+                    sys.stdout.buffer.write(buffer[expect_seq])
+                    sys.stdout.flush()
                     expect_seq += 1
                 send_ack(expect_seq)
             

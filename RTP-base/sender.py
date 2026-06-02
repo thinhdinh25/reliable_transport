@@ -1,5 +1,6 @@
 import argparse
 import socket
+import sys
 
 from utils import PacketHeader, compute_checksum
 
@@ -8,7 +9,7 @@ receiver_ip = "127.0.0.1"
 receiver_port = 10000
 sender_port = 10001
 
-text = "A" * 10000
+text = ""
 
 chunks = []
 payload_size = 1400
@@ -48,7 +49,6 @@ def sender():
         local_seq += 1
 
     #initialization
-    s.bind(('0.0.0.0', sender_port))
     s.settimeout(0.5)
 
     #start sending
@@ -94,9 +94,8 @@ def handle_data():
     while base <= total:
         while next_seq < base + window_size and next_seq <= total:
             s.sendto( bytes(chunks[next_seq - 1]), (receiver_ip, receiver_port))
-            next_seq += 1;
-            
-            #wait for ack
+            next_seq += 1
+        #wait for ack
         try:
             ack, address = s.recvfrom(2048)
         except socket.timeout:
@@ -160,7 +159,7 @@ def sender_start():
 
 
 def main():
-    global sender_ip, sender_port, window_size
+    global receiver_ip, receiver_port, window_size, text
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "receiver_ip", help="The IP address of the host that receiver is running on"
@@ -173,10 +172,10 @@ def main():
     )
     args = parser.parse_args()
 
-    sender_ip = args.receiver_ip
-    sender_port = args.receiver_port
+    receiver_ip = args.receiver_ip
+    receiver_port = args.receiver_port
     window_size = args.window_size
-
+    text = sys.stdin.buffer.read()
     sender()
 
 
