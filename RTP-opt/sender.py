@@ -94,7 +94,7 @@ def handle_data():
     while base <= total:
         while next_seq < base + window_size and next_seq <= total:
             s.sendto( bytes(chunks[next_seq - 1]), (receiver_ip, receiver_port))
-            # next_seq += 1
+            next_seq += 1
             
             #wait for ack
         try:
@@ -113,7 +113,7 @@ def handle_data():
             print("Received packet NOT ACK")
             continue
         #verify correct next_seq
-        if ack_header.seq_num <= base or ack_header.seq_num > next_seq:
+        if ack_header.seq_num < base or ack_header.seq_num > next_seq:
             print("Wrong seq number")
             continue
         # Verify checksum

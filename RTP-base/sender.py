@@ -1,13 +1,12 @@
 import argparse
 import socket
 import sys
+from time import sleep
 
 from utils import PacketHeader, compute_checksum
 
-sender_ip = "0"
 receiver_ip = "127.0.0.1"
 receiver_port = 10000
-sender_port = 10001
 
 text = ""
 
@@ -56,6 +55,7 @@ def sender():
 
 
 def handle_start():
+    print("starting")
     #create start packet
     start_header = PacketHeader(type=0, seq_num=0, length=0)
     start_header.checksum = compute_checksum(start_header)
@@ -82,6 +82,7 @@ def handle_start():
         if verify_checksum(ack) == False:
             print("Start ACK checksums not match")
             continue
+        print("Sender got true start", file=sys.stderr)
         break
 
 def handle_data():
@@ -95,7 +96,8 @@ def handle_data():
         while next_seq < base + window_size and next_seq <= total:
             s.sendto( bytes(chunks[next_seq - 1]), (receiver_ip, receiver_port))
             next_seq += 1
-        #wait for ack
+            
+            #wait for ack
         try:
             ack, address = s.recvfrom(2048)
         except socket.timeout:
@@ -176,6 +178,13 @@ def main():
     receiver_port = args.receiver_port
     window_size = args.window_size
     text = sys.stdin.buffer.read()
+    
+
+    # receiver_ip = "localhost"
+    # receiver_port = 10000
+    # window_size = 4
+    # text = "A" * 100
+    
     sender()
 
 

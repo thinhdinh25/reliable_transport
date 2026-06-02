@@ -1,6 +1,7 @@
 import argparse
 import socket
 import sys
+from time import sleep
 
 from utils import PacketHeader, compute_checksum
 
@@ -37,12 +38,17 @@ def receive_start():
         # Extract header and payload
         start_header = PacketHeader(start_pkt[:16])
         #verify start packet
-        if start_header.type != 0 or start_header.seq_num != 0 or start_header.length != 0:
-            print("Not Start Package", file=sys.stderr)
+        if start_header.type != 0:
+            print("error 1")
+            continue
+        if start_header.seq_num != 0:
+            print("error 2")
+            continue
+        if start_header.length != 0:
+            print("error 3")
             continue
         # Verify checksum
         if verify_checksum(start_pkt) == False:
-            print("Start checksums not match", file=sys.stderr)
             continue
         # resent ack of start
         send_ack(1)
@@ -67,8 +73,8 @@ def receive_data():
 
         #end condition 
         elif data_header.type == 1:
+            print("ending now")
             send_ack(expect_seq + 1)
-            print("received all file", file=sys.stderr)
             break
 
         elif data_header.type == 2:
@@ -85,17 +91,11 @@ def receive_data():
                     expect_seq += 1
                 send_ack(expect_seq)
             
-
-
-
 def receiver():
     s.bind((receiver_ip, receiver_port))
     while True:
         receive_start()
         receive_data()
-
-        
-
 
 def main():
     global receiver_ip, receiver_port, window_size
@@ -115,8 +115,11 @@ def main():
     receiver_port = args.receiver_port
     window_size = args.window_size
 
-    receiver()
+    # receiver_ip = "localhost"
+    # receiver_port = 10000
+    # window_size = 4
 
+    receiver()
 
 if __name__ == "__main__":
     main()

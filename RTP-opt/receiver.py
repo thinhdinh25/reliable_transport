@@ -86,7 +86,6 @@ def receive_data():
                     sys.stdout.flush()
                     del buffer[expect_seq]
                     expect_seq += 1
-                send_ack(expect_seq)
             
 
 
